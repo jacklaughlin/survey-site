@@ -1,0 +1,164 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: survey
+    description: Survey operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /survey:
+    post:
+      operationId: submitSurvey
+      tags: [survey]
+      summary: Submit a survey response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SurveySubmission"
+      responses:
+        "201":
+          description: Survey submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmitSurveyResult"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /survey/results:
+    get:
+      operationId: getSurveyResults
+      tags: [survey]
+      summary: Get aggregated survey results
+      responses:
+        "200":
+          description: Aggregated survey results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SurveyResults"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    SurveySubmission:
+      type: object
+      properties:
+        state:
+          type: string
+          description: US state the respondent is from
+        gender:
+          type: string
+          enum: [Male, Female]
+        nflTeam:
+          type: string
+          description: Favorite NFL team
+        collegeTeam:
+          type: string
+          description: Favorite college football team
+        collegeTeamOther:
+          type: string
+          description: Write-in college team if Other selected
+        footballPreference:
+          type: string
+          enum: [College, NFL, "Both equally"]
+        watchFrequency:
+          type: string
+          enum: ["Every game", "Most games", "Occasionally", "Rarely"]
+        attendsInPerson:
+          type: boolean
+          description: Whether the respondent attends games in person
+        favoritePosition:
+          type: string
+          enum: [QB, RB, WR, TE, OL, DL, LB, DB, "K/P"]
+      required:
+        - state
+        - gender
+        - nflTeam
+        - collegeTeam
+        - footballPreference
+        - watchFrequency
+        - attendsInPerson
+        - favoritePosition
+    SubmitSurveyResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        id:
+          type: string
+      required:
+        - success
+        - id
+    AggregateCount:
+      type: object
+      additionalProperties:
+        type: integer
+    SurveyResults:
+      type: object
+      properties:
+        totalResponses:
+          type: integer
+        byState:
+          $ref: "#/components/schemas/AggregateCount"
+        byGender:
+          $ref: "#/components/schemas/AggregateCount"
+        byNflTeam:
+          $ref: "#/components/schemas/AggregateCount"
+        byCollegeTeam:
+          $ref: "#/components/schemas/AggregateCount"
+        byFootballPreference:
+          $ref: "#/components/schemas/AggregateCount"
+        byWatchFrequency:
+          $ref: "#/components/schemas/AggregateCount"
+        byAttendsInPerson:
+          $ref: "#/components/schemas/AggregateCount"
+        byFavoritePosition:
+          $ref: "#/components/schemas/AggregateCount"
+      required:
+        - totalResponses
+        - byState
+        - byGender
+        - byNflTeam
+        - byCollegeTeam
+        - byFootballPreference
+        - byWatchFrequency
+        - byAttendsInPerson
+        - byFavoritePosition
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
